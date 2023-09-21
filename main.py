@@ -40,14 +40,25 @@ def patient_profile():
 @jwt_required()
 def diagnose():
     # Add a way to connect Dr with disease
-    care_provider_id = get_jwt_identity()
-    patient_id = request.json.get('patient_id')
-    disease_name = request.json.get('disease_name')
-    print("CP ID: ", care_provider_id)
-    if request.method == 'POST':
-        url = f'{cloud_url}/diagnose'
-        data = {'patient_id': patient_id, 'disease_name': disease_name, 'care_provider_id': care_provider_id}
-        response = requests.post(url, json=data)
+    try:
+        care_provider_id = get_jwt_identity()
+        patient_id = request.json.get('patient_id')
+        disease_name = request.json.get('disease_name')
+        print("CP ID: ", care_provider_id)
+        if request.method == 'POST':
+            url = f'{cloud_url}/diagnose'
+            data = {'patient_id': patient_id, 'disease_name': disease_name, 'care_provider_id': care_provider_id}
+            response = requests.post(url, json=data)
+            disease_id = response.json()
+    except:
+        return('err')
+    # event
+    event_url = get_event_server()
+    event_url = event_url['url']
+    event_url = f'{event_url}/event-diagnosis'
+    data = {'provider_id': care_provider_id, 'patient_id': patient_id, 'disease_id': disease_id}
+    event_response = requests.post(event_url, json=data)
+
     return jsonify("test")
 
 @app.route('/add-patient', methods=['GET', 'POST'])
@@ -61,13 +72,26 @@ def add_patient():
         data = {'patient': patient_id, 'provider': care_provider_id}
         response = requests.post(url, json=data)
         print(response.text)
+
         if json.loads(response.text) == {"User": []}:
             return jsonify(response.json)
         else:
+            event_url = get_event_server()
+            event_url = event_url['url']
+            event_url = f'{event_url}/event-patient-provider'
+            data = {'patient_id': patient_id, 'provider_id': care_provider_id}
+            event_response = requests.post(event_url, json=data)
             return jsonify(patient_id)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+def get_event_server():
+    event_url = f'{cloud_url}/event_server'
+    response = requests.get(event_url)
+    return response.json()
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
