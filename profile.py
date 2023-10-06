@@ -29,12 +29,13 @@ def patient_profile_data(cloud_url, request):
         response = requests.post(url, json=data)
         current_patient_info = response.json()
         print(current_patient_info)
-        # insert_data(current_patient_info)
         current_patient_data = current_patient_info[0]['User'][0]['attributes']
         first_name = current_patient_data['first_name']
         DOB = current_patient_data['DOB']
+        events = current_patient_data['event']
+        print("EVENTS: ",events)
 
-        return jsonify({'first_name': f'{first_name}', 'DOB': f'{DOB}'}), 200
+        return jsonify({'first_name': f'{first_name}', 'DOB': f'{DOB}', 'events': events}), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 400

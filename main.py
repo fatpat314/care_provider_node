@@ -9,6 +9,7 @@ import argparse
 
 from login import login_data
 from profile import profile_data, patient_profile_data
+from register import register_data
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY # change this to a random string in production
@@ -21,6 +22,20 @@ def home():
     if(request.method == 'GET'):
         data = "hello Class!"
         return jsonify({'data': data})
+
+@app.route('/provider-register', methods=['POST'])
+def provider_register():
+    try:
+        new_provider = register_data(cloud_url, request)
+    except:
+        return('err')
+    # add event
+    event_url = get_event_server()
+    event_url = event_url['url']
+    event_url = f'{event_url}/event-provider-register'
+    data = {'provider_id': new_provider}
+    event_response = requests.post(event_url, json=data)
+    return('hi')
 
 @app.route('/provider-login', methods=['GET', 'POST'])
 def provider_login():
@@ -71,7 +86,16 @@ def add_patient():
         url = f'{cloud_url}/add-patient'
         data = {'patient': patient_id, 'provider': care_provider_id}
         response = requests.post(url, json=data)
-        print(response.text)
+        # print(response.text)
+        
+        auth_header = request.headers.get("Authorization")
+    
+        if auth_header:
+            # Extract the token from the header (assuming "Bearer" prefix)
+            jwt_token = auth_header.split(" ")[1] if auth_header.startswith("Bearer ") else auth_header
+            # print(f"JWT Token: {token}")
+        else:
+            print("Authorization header not found")
 
         if json.loads(response.text) == {"User": []}:
             return jsonify(response.json)
@@ -80,7 +104,11 @@ def add_patient():
             event_url = event_url['url']
             event_url = f'{event_url}/event-patient-provider'
             data = {'patient_id': patient_id, 'provider_id': care_provider_id}
-            event_response = requests.post(event_url, json=data)
+            headers = {
+                'Authorization': f'Bearer {jwt_token}',  # Assuming "Bearer" is the prefix for your token
+                'Content-Type': 'application/json'  # Assuming JSON data is being sent
+            }
+            event_response = requests.post(event_url, json=data, headers=headers)
             return jsonify(patient_id)
 
     except Exception as e:
