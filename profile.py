@@ -22,20 +22,39 @@ def profile_data(cloud_url, request):
 
 def patient_profile_data(cloud_url, request):
     try:
-        print("HELLO")
+        # print("HELLO")
         url = f'{cloud_url}/profile'
         patient_id = request.json.get('patient_id')
         data = {'identity': patient_id}
         response = requests.post(url, json=data)
         current_patient_info = response.json()
-        print(current_patient_info)
+        # print(current_patient_info)
         current_patient_data = current_patient_info[0]['User'][0]['attributes']
         first_name = current_patient_data['first_name']
         DOB = current_patient_data['DOB']
         events = current_patient_data['event']
-        print("EVENTS: ",events)
+        # print("EVENTS: ",events)
 
         return jsonify({'first_name': f'{first_name}', 'DOB': f'{DOB}', 'events': events}), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+def graph_visual_data(cloud_url, request):
+    print("NAME: ", request.json.get('patient_id'))
+    try:
+        url = f'{cloud_url}/graph-visual'
+        print("URL: ", url)
+        patient_id = request.json.get('patient_id')
+        # print("Patient_ID: ", patient_id)
+        data = {'identity': patient_id}
+        response = requests.post(url, json=data)
+        # current_patient_info = response.json()
+        # print("RESPONSE: ", response.json()[0])
+        # print("DICT: ", response.json()[1])
+        root = response.json()[0]
+        leaf = response.json()[1]
+        ret_list = [root, leaf]
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    return ret_list

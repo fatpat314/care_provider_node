@@ -1,32 +1,36 @@
 import config
 from dotenv import load_dotenv
-import openai
+# import openai
 from flask import Flask, jsonify, request, session, g
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, \
                                create_access_token, get_jwt_identity
-import requests, names, random, threading, uuid, json
+import requests, random, threading, uuid, json
 import argparse
 
 from login import login_data
-from profile import profile_data, patient_profile_data
+from profile import profile_data, patient_profile_data, graph_visual_data
 from register import register_data
 
 app = Flask(__name__)
+CORS(app)
+
 app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY # change this to a random string in production
-cloud_url = "http://localhost:6000"
+CNM_url = "http://localhost:8010"
+# CNM_url = "https://cognitive-network-manager-rdwl5upzra-uw.a.run.app"
 jwt = JWTManager(app)
 load_dotenv()
 
 @app.route('/', methods = ['GET'])
 def home():
     if(request.method == 'GET'):
-        data = "hello Class!"
+        data = "Care Provider Node"
         return jsonify({'data': data})
 
 @app.route('/provider-register', methods=['POST'])
 def provider_register():
     try:
-        new_provider = register_data(cloud_url, request)
+        new_provider = register_data(CNM_url, request)
     except:
         return('err')
     # add event
@@ -39,17 +43,37 @@ def provider_register():
 
 @app.route('/provider-login', methods=['GET', 'POST'])
 def provider_login():
-    return login_data(cloud_url, request)
+    return login_data(CNM_url, request)
 
 @app.route('/provider-profile', methods=['GET', 'POST'])
 @jwt_required()
 def provider_profile():
-    return profile_data(cloud_url, request)
+    return profile_data(CNM_url, request)
 
 @app.route('/patient-profile', methods=['GET', 'POST'])
 @jwt_required()
 def patient_profile():
-    return(patient_profile_data(cloud_url, request))
+    return(patient_profile_data(CNM_url, request))
+
+@app.route('/graph-root', methods=['GET', 'POST'])
+@jwt_required()
+def graph_root():
+    # print("HERE")
+    test = graph_visual_data(CNM_url, request)
+    print(test[0])
+    # graph_list = [root, leaf]
+    root = test[0]
+    return (root)
+
+@app.route('/graph-leaf', methods=['GET', 'POST'])
+@jwt_required()
+def graph_leaf():
+    # print("HERE")
+    test = graph_visual_data(CNM_url, request)
+    print(test[1])
+    # graph_list = [root, leaf]
+    leaf = test[1]
+    return (leaf)
 
 @app.route('/diagnose', methods = ['GET', 'POST'])
 @jwt_required()
@@ -61,7 +85,7 @@ def diagnose():
         disease_name = request.json.get('disease_name')
         print("CP ID: ", care_provider_id)
         if request.method == 'POST':
-            url = f'{cloud_url}/diagnose'
+            url = f'{CNM_url}/diagnose'
             data = {'patient_id': patient_id, 'disease_name': disease_name, 'care_provider_id': care_provider_id}
             response = requests.post(url, json=data)
             disease_id = response.json()
@@ -83,7 +107,7 @@ def add_patient():
         patient_id = request.json.get('input')
         # print("ID: ", patient_id)
         care_provider_id = get_jwt_identity()
-        url = f'{cloud_url}/add-patient'
+        url = f'{CNM_url}/add-patient'
         data = {'patient': patient_id, 'provider': care_provider_id}
         response = requests.post(url, json=data)
         # print(response.text)
@@ -102,6 +126,7 @@ def add_patient():
         else:
             event_url = get_event_server()
             event_url = event_url['url']
+            print("TEST", event_url)
             event_url = f'{event_url}/event-patient-provider'
             data = {'patient_id': patient_id, 'provider_id': care_provider_id}
             headers = {
@@ -115,7 +140,7 @@ def add_patient():
         return jsonify({'error': str(e)}), 400
 
 def get_event_server():
-    event_url = f'{cloud_url}/event_server'
+    event_url = f'{CNM_url}/event_server'
     response = requests.get(event_url)
     return response.json()
 
