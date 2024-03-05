@@ -41,10 +41,10 @@ def patient_profile_data(cloud_url, request):
         return jsonify({'error': str(e)}), 400
 
 def graph_visual_data(cloud_url, request):
-    print("NAME: ", request.json.get('patient_id'))
+    # print("NAME: ", request.json.get('patient_id'))
     try:
         url = f'{cloud_url}/graph-visual'
-        print("URL: ", url)
+        # print("URL: ", url)
         patient_id = request.json.get('patient_id')
         # print("Patient_ID: ", patient_id)
         data = {'identity': patient_id}
@@ -58,3 +58,16 @@ def graph_visual_data(cloud_url, request):
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     return ret_list
+
+def event_visual_data(cloud_url, request):
+    # print("NAME: ", request.json.get('patient_id'))
+    try:
+        url = f'{cloud_url}/event-visual'
+        patient_id = request.json.get('patient_id')
+        data = {'identity': patient_id}
+        response = requests.post(url, json=data)
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    # return ret_list
+    return("test")

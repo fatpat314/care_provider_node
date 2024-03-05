@@ -9,7 +9,7 @@ import requests, random, threading, uuid, json
 import argparse
 
 from login import login_data
-from profile import profile_data, patient_profile_data, graph_visual_data
+from profile import profile_data, patient_profile_data, graph_visual_data, event_visual_data
 from register import register_data
 
 app = Flask(__name__)
@@ -17,7 +17,6 @@ CORS(app)
 
 app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY # change this to a random string in production
 CNM_url = "http://localhost:8010"
-# CNM_url = "https://cognitive-network-manager-rdwl5upzra-uw.a.run.app"
 jwt = JWTManager(app)
 load_dotenv()
 
@@ -54,26 +53,6 @@ def provider_profile():
 @jwt_required()
 def patient_profile():
     return(patient_profile_data(CNM_url, request))
-
-@app.route('/graph-root', methods=['GET', 'POST'])
-@jwt_required()
-def graph_root():
-    # print("HERE")
-    test = graph_visual_data(CNM_url, request)
-    print(test[0])
-    # graph_list = [root, leaf]
-    root = test[0]
-    return (root)
-
-@app.route('/graph-leaf', methods=['GET', 'POST'])
-@jwt_required()
-def graph_leaf():
-    # print("HERE")
-    test = graph_visual_data(CNM_url, request)
-    print(test[1])
-    # graph_list = [root, leaf]
-    leaf = test[1]
-    return (leaf)
 
 @app.route('/diagnose', methods = ['GET', 'POST'])
 @jwt_required()
@@ -143,6 +122,29 @@ def get_event_server():
     event_url = f'{CNM_url}/event_server'
     response = requests.get(event_url)
     return response.json()
+
+@app.route('/graph-root', methods=['GET', 'POST'])
+@jwt_required()
+def graph_root():
+    root = graph_visual_data(CNM_url, request)
+    return (root[0])
+
+@app.route('/graph-leaf', methods=['GET', 'POST'])
+@jwt_required()
+def graph_leaf():
+    leaf = graph_visual_data(CNM_url, request)
+    return (leaf[1])
+
+@app.route('/event-root', methods=['GET', 'POST'])
+@jwt_required()
+def event_root():
+    root = event_visual_data(CNM_url, request)
+    return(root.json())
+
+@app.route('/event-leaf', methods=['GET', 'POST'])
+@jwt_required()
+def event_leaf():
+    pass
 
 
 
