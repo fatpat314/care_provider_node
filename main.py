@@ -17,6 +17,7 @@ CORS(app)
 
 app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY # change this to a random string in production
 CNM_url = "http://localhost:8010"
+# CNM_url = "https://cognitive-network-manager-rdwl5upzra-uw.a.run.app"
 jwt = JWTManager(app)
 load_dotenv()
 
@@ -126,14 +127,8 @@ def get_event_server():
 @app.route('/graph-root', methods=['GET', 'POST'])
 @jwt_required()
 def graph_root():
-    root = graph_visual_data(CNM_url, request)
-    return (root[0])
-
-@app.route('/graph-leaf', methods=['GET', 'POST'])
-@jwt_required()
-def graph_leaf():
-    leaf = graph_visual_data(CNM_url, request)
-    return (leaf[1])
+    root, leaf = graph_visual_data(CNM_url, request)
+    return {"root": root, "leaf": leaf}
 
 @app.route('/event-root', methods=['GET', 'POST'])
 @jwt_required()

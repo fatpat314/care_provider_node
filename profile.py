@@ -54,10 +54,10 @@ def graph_visual_data(cloud_url, request):
         # print("DICT: ", response.json()[1])
         root = response.json()[0]
         leaf = response.json()[1]
-        ret_list = [root, leaf]
+        # ret_list = [root, leaf]
+        return root, leaf
     except Exception as e:
         return jsonify({'error': str(e)}), 400
-    return ret_list
 
 def event_visual_data(cloud_url, request):
     # print("NAME: ", request.json.get('patient_id'))
