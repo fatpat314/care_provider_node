@@ -60,14 +60,13 @@ def graph_visual_data(cloud_url, request):
         return jsonify({'error': str(e)}), 400
 
 def event_visual_data(cloud_url, request):
-    # print("NAME: ", request.json.get('patient_id'))
     try:
         url = f'{cloud_url}/event-visual'
         patient_id = request.json.get('patient_id')
         data = {'identity': patient_id}
         response = requests.post(url, json=data)
-        return response
+        root = response.json()[0]
+        leaf = response.json()[1]
+        return root, leaf
     except Exception as e:
         return jsonify({'error': str(e)}), 400
-    # return ret_list
-    return("test")

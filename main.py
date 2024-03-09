@@ -16,8 +16,8 @@ app = Flask(__name__)
 CORS(app)
 
 app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY # change this to a random string in production
-CNM_url = "http://localhost:8010"
-# CNM_url = "https://cognitive-network-manager-rdwl5upzra-uw.a.run.app"
+# CNM_url = "http://localhost:8010"
+CNM_url = "https://cognitive-network-manager-rdwl5upzra-uw.a.run.app"
 jwt = JWTManager(app)
 load_dotenv()
 
@@ -133,14 +133,8 @@ def graph_root():
 @app.route('/event-root', methods=['GET', 'POST'])
 @jwt_required()
 def event_root():
-    root = event_visual_data(CNM_url, request)
-    return(root.json())
-
-@app.route('/event-leaf', methods=['GET', 'POST'])
-@jwt_required()
-def event_leaf():
-    pass
-
+    root, leaf = event_visual_data(CNM_url, request)
+    return{'leaf': leaf, 'root': root}
 
 
 if __name__ == '__main__':
